@@ -81,6 +81,36 @@ def callback_query(call):
     else:
         bot.send_message(user_id, "К сожалению, ты не успел получить картинку! Попробуй в следующий раз!)")
 
+@bot.message_handler(commands=['add_image'])
+def handle_add_image(message):
+    if message.chat.id not in ADMINS:
+        bot.reply_to(message, "У вас нет прав для выполнения этой команды.")
+        return
+
+    bot.reply_to(message, "Отправьте картинку, которую хотите добавить.")
+    bot.register_next_step_handler(message, receive_image)
+
+def receive_image(message):
+    if not message.photo:
+        bot.reply_to(message, "Это не картинка. Попробуйте снова.")
+        return
+
+    file_id = message.photo[-1].file_id 
+    file_info = bot.get_file(file_id)
+    downloaded_file = bot.download_file(file_info.file_path)
+
+    image_name = f"new_image_{datetime.now().strftime('%Y%m%d%H%M%S')}.jpg"
+    with open(f'img/{image_name}', 'wb') as new_file:
+        new_file.write(downloaded_file)
+
+    manager.add_prize([(image_name,)])
+    bot.reply_to(message, "Картинка успешно добавлена!")
+
+
+@bot.message_handler(commands=['get_id'])
+def handle_get_id(message):
+    bot.reply_to(message, f"Ваш ID: {message.chat.id}")
+
 
 
 
